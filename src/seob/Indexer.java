@@ -3,11 +3,9 @@ package seob;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.IntField;
@@ -61,7 +59,6 @@ public class Indexer
 				}
 				*/
 				title.append(line);
-				title.append(" ");
 			}
 			System.out.println("title: "+title);
 			
@@ -83,7 +80,6 @@ public class Indexer
 				}
 				*/
 				body.append(line);
-				body.append(" ");
 			}
 			System.out.println("body: "+body);
 			
@@ -99,7 +95,7 @@ public class Indexer
 		Document doc = new Document();
 		doc.add(new IntField("id", id, Field.Store.YES));
 		doc.add(new TextField("title", title, Field.Store.YES));
-		doc.add(new StringField("body", body, Field.Store.YES));
+		doc.add(new TextField("body", body, Field.Store.YES));
 		w.addDocument(doc);
 	}
 }

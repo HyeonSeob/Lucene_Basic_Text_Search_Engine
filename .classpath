@@ -4,5 +4,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 	<classpathentry kind="lib" path="lucene-core-5.1.0.jar"/>
 	<classpathentry kind="lib" path="lucene-analyzers-common-5.1.0.jar"/>
+	<classpathentry kind="lib" path="/Users/hyeon-seob/Documents/workspace/basic_text_search_engine/lucene-queryparser-5.1.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
