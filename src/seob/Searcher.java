@@ -1,17 +1,19 @@
 package seob;
 
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Stack;
 import java.util.Vector;
 
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopScoreDocCollector;
 import org.apache.lucene.store.FSDirectory;
+import org.tartarus.snowball.ext.PorterStemmer;
 
 
 public class Searcher {
@@ -19,6 +21,7 @@ public class Searcher {
 	private static IndexReader reader;
 	private static IndexSearcher searcher;
 	private static PorterAnalyzer analyzer;
+	private static int doc_num;
 	
 	public static void main(String[] args) {
 		createSearcher();
@@ -171,7 +174,21 @@ public class Searcher {
 	
 	private static void tfidf()
 	{
-		
+		PorterStemmer ps = new PorterStemmer();
+		int docNum = reader.numDocs();
+		int docFreq;
+		for(String s : query)
+		{
+			try {
+				ps.setCurrent(s);
+				ps.stem();
+				docFreq = reader.docFreq(new Term("body", ps.getCurrent()));
+				
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(0);
+			}
+		}
 	}
 	
 	private static void cosineRanking()
