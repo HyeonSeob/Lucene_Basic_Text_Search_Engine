@@ -1,18 +1,37 @@
 package seob;
 
+import java.awt.List;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.Stack;
+import java.util.TreeMap;
 import java.util.Vector;
 
 import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.DocsEnum;
+import org.apache.lucene.index.Fields;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.MultiFields;
+import org.apache.lucene.index.PostingsEnum;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.Terms;
+import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopScoreDocCollector;
+import org.apache.lucene.search.similarities.DefaultSimilarity;
+import org.apache.lucene.search.similarities.TFIDFSimilarity;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.BytesRef;
 import org.tartarus.snowball.ext.PorterStemmer;
 
 
@@ -23,7 +42,7 @@ public class Searcher {
 	private static PorterAnalyzer analyzer;
 	private static int doc_num;
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		createSearcher();
 		
 		query = new Vector<String>();
@@ -172,23 +191,54 @@ public class Searcher {
 		return merge;
 	}
 	
-	private static void tfidf()
+	private static void tfidf() throws IOException
 	{
+		TFIDFSimilarity tfidfSim = new DefaultSimilarity();
 		PorterStemmer ps = new PorterStemmer();
-		int docNum = reader.numDocs();
-		int docFreq;
-		for(String s : query)
-		{
-			try {
-				ps.setCurrent(s);
-				ps.stem();
-				docFreq = reader.docFreq(new Term("body", ps.getCurrent()));
-				
-			} catch (IOException e) {
-				e.printStackTrace();
-				System.exit(0);
-			}
-		}
+		PostingsEnum posting_enum;
+		Term term;
+		
+		Map<Integer, Double> tfidfWeight = new HashMap<>();
+		int docId, docNum = reader.numDocs();
+		long docFreq;
+	    double tfidf;
+	    
+	    for(String q : query)
+	    {
+	    	ps.setCurrent(q);
+			ps.stem();
+			term = new Term("body", ps.getCurrent());
+			docFreq = reader.docFreq(term);
+			posting_enum = MultiFields.getTermDocsEnum(reader, MultiFields.getLiveDocs(reader), "body", term.bytes());
+			
+			while(posting_enum != null && (posting_enum.nextDoc()) != PostingsEnum.NO_MORE_DOCS)
+			{
+				docId = posting_enum.docID()+1;
+				tfidf = tfidfSim.tf(posting_enum.freq()) * tfidfSim.idf(docFreq, docNum);
+				if(tfidfWeight.containsKey(docId))
+					tfidfWeight.put(docId, tfidfWeight.get(docId) + tfidf);
+				else
+					tfidfWeight.put(docId, tfidf);
+ 			}
+	    }
+	    
+	    LinkedList<Entry<Integer, Double>> tfidf_list = new LinkedList<Entry<Integer, Double>>(tfidfWeight.entrySet());
+	    Collections.sort(tfidf_list, new Comparator<Entry<Integer, Double>>()
+	            {
+	                public int compare(Entry<Integer, Double> o1,
+	                        Entry<Integer, Double> o2)
+	                {
+	                	if(o1.getValue().compareTo(o2.getValue()) == 0)
+	                		return o1.getKey().compareTo(o2.getKey());
+	                	else 
+	                		return o2.getValue().compareTo(o1.getValue());
+	                }
+	            });
+	    
+	    for(Entry<Integer, Double> e : tfidf_list)
+	    {
+	    	System.out.println(e.getKey());
+	    }
 	}
 	
 	private static void cosineRanking()

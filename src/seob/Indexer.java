@@ -8,9 +8,11 @@ import java.nio.file.Paths;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.IntField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
+import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.FSDirectory;
@@ -93,9 +95,15 @@ public class Indexer
 	private static void addDoc(IndexWriter w, int id, String title, String body) throws IOException
 	{
 		Document doc = new Document();
+		FieldType type = new FieldType();
+		type.setIndexOptions(IndexOptions.DOCS);
+		type.setStored(true);
+		type.setStoreTermVectors(true);
 		doc.add(new IntField("id", id, Field.Store.YES));
-		doc.add(new TextField("title", title, Field.Store.YES));
-		doc.add(new TextField("body", body, Field.Store.YES));
+		doc.add(new Field("title", title, type));
+		doc.add(new Field("body", body, type));
+		//doc.add(new TextField("title", title, Field.Store.YES));
+		//doc.add(new TextField("body", body, Field.Store.YES));
 		w.addDocument(doc);
 	}
 }
